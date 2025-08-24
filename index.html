@@ -6,73 +6,52 @@
 <title>The Brain Rot Corner</title>
 <style>
   :root{ --bg:#0f1115; --panel:#131620; --border:#2b3040; --text:#e6edf3; }
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
   .corner{
     position:fixed; right:12px; bottom:12px;
-    width:320px; height:200px; z-index:99999;
+    width:360px; height:220px; z-index:99999;
     border:1px solid var(--border); border-radius:12px; overflow:hidden;
     background:black; box-shadow:0 10px 24px rgba(0,0,0,.4);
-    user-select:none;
   }
-  .bar{display:flex; align-items:center; gap:8px;
-    background:var(--panel); padding:6px 8px; cursor:move; font-weight:600; font-size:12px;}
+  .bar{display:flex;align-items:center;gap:8px;background:var(--panel);padding:6px 8px;font-weight:600;font-size:12px}
   .title{flex:1}
-  .btn{appearance:none;border:1px solid var(--border);background:#191e2b;color:var(--text);
-    border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer}
+  .btn{border:1px solid var(--border);background:#191e2b;color:var(--text);
+       border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer}
   .btn:hover{background:#202637}
-  iframe, video{display:block; width:100%; height:calc(100% - 32px); border:0}
-  .hint{position:fixed; left:12px; bottom:12px; color:#a9b4c2; font-size:12px}
+  iframe{width:100%;height:calc(100% - 32px);border:0;display:block;background:black}
 </style>
 </head>
 <body>
   <div class="corner" id="corner">
-    <div class="bar" id="dragbar">
+    <div class="bar">
       <span class="title">🧠 The Brain Rot Corner</span>
       <button class="btn" id="muteBtn">Unmute</button>
       <button class="btn" id="closeBtn">Close</button>
     </div>
-    <!-- Subway Surfers gameplay loop (YouTube) -->
-    <iframe id="yt" src="https://www.youtube.com/embed/J0Z3nh-ah-k?autoplay=1&mute=1&loop=1&playlist=J0Z3nh-ah-k&controls=0&modestbranding=1&rel=0"
-            allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <iframe id="yt" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   </div>
-  <div class="hint">Drag the panel. “Unmute” may require clicking the video once (browser policy).</div>
 
 <script>
 (function(){
-  const corner = document.getElementById('corner');
-  const dragbar = document.getElementById('dragbar');
+  const yt = document.getElementById('yt');
   const muteBtn = document.getElementById('muteBtn');
   const closeBtn = document.getElementById('closeBtn');
-  const yt = document.getElementById('yt');
 
-  // Dragging
-  let dragging=false, sx=0, sy=0, ox=0, oy=0;
-  dragbar.addEventListener('mousedown', e=>{ dragging=true; sx=e.clientX; sy=e.clientY; const r=corner.getBoundingClientRect(); ox=r.left; oy=r.top; e.preventDefault(); });
-  window.addEventListener('mousemove', e=>{
-    if(!dragging) return;
-    const dx=e.clientX-sx, dy=e.clientY-sy;
-    corner.style.left = (ox+dx)+'px';
-    corner.style.top  = (oy+dy)+'px';
-    corner.style.right = 'auto';
-    corner.style.bottom = 'auto';
-  });
-  window.addEventListener('mouseup', ()=> dragging=false);
-
-  // Mute toggle uses YouTube player parameters (reload trick)
+  // Hard-coded Subway Surfers gameplay (embeddable video ID)
+  const vid = "Q9B_3QUqkO0"; 
   let muted = true;
-  function setMuted(m){
-    muted = m;
-    const base = "https://www.youtube.com/embed/J0Z3nh-ah-k";
-    const params = `?autoplay=1&mute=${muted?1:0}&loop=1&playlist=J0Z3nh-ah-k&controls=0&modestbranding=1&rel=0`;
-    yt.src = base + params;
+
+  function refresh(){
+    const base = "https://www.youtube.com/embed/"+vid;
+    const params = `?autoplay=1&mute=${muted?1:0}&loop=1&playlist=${vid}&controls=0&modestbranding=1&rel=0`;
+    yt.src = base+params;
     muteBtn.textContent = muted ? "Unmute" : "Mute";
   }
-  muteBtn.addEventListener('click', ()=> setMuted(!muted));
-  setMuted(true);
 
-  // Close
-  closeBtn.addEventListener('click', ()=> corner.remove());
+  muteBtn.addEventListener("click", ()=>{ muted=!muted; refresh(); });
+  closeBtn.addEventListener("click", ()=> yt.parentElement.remove());
+
+  refresh(); // init
 })();
 </script>
 </body>
