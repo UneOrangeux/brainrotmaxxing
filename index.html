@@ -3,98 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Brain Rot Corner</title>
+<title>The Brain Rot Corner – 16:9</title>
 <style>
   :root{ --bg:#0f1115; --panel:#131620; --border:#2b3040; --text:#e6edf3; }
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  /* Floating corner panel (bottom-right) that keeps a 16:9 video */
   .corner{
-    position:fixed; top:0; right:0;
-    height:100%; z-index:99999;
-    border-left:1px solid var(--border);
-    background:black; box-shadow:-4px 0 12px rgba(0,0,0,.4);
-    display:flex; flex-direction:column;
+    position:fixed; right:12px; bottom:12px; z-index:99999;
+    display:flex; flex-direction:column; width:420px;
+    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    background:black; box-shadow:0 10px 24px rgba(0,0,0,.4);
   }
-  .bar{display:flex;align-items:center;gap:8px;background:var(--panel);
-       padding:6px 8px;font-weight:600;font-size:12px}
+  .bar{display:flex; align-items:center; gap:8px; background:var(--panel);
+       padding:6px 8px; font-weight:600; font-size:12px; cursor:move;}
   .title{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .btn{border:1px solid var(--border);background:#191e2b;color:var(--text);
-       border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer}
+  .btn{border:1px solid var(--border); background:#191e2b; color:var(--text);
+       border-radius:6px; padding:4px 8px; font-size:12px; cursor:pointer}
   .btn:hover{background:#202637}
-  .iframe-wrap{flex:1;overflow:hidden;position:relative;background:black}
-  iframe{
-    position:absolute;top:0;left:0;
-    width:100%;height:100%;
-    border:0;
-    transform:scale(1.35); /* zoom to fill vertical panel */
-    transform-origin:center;
-  }
-  /* Drag handle on the left edge */
-  .resize-handle{
-    position:absolute; left:-6px; top:0; width:10px; height:100%;
-    cursor:col-resize; z-index:100000; /* above iframe */
-    background:transparent;
-  }
-  .hint{position:fixed; left:12px; bottom:12px; color:#a9b4c2; font-size:12px}
-  /* Optional width slider */
-  .range{appearance:none; width:110px; height:4px; background:#2b3040; border-radius:999px; outline:none}
+  /* 16:9 box using padding-top trick */
+  .frame-wrap{position:relative; width:100%;}
+  .frame-wrap::before{content:""; display:block; padding-top:56.25%;} /* 16:9 */
+  iframe{position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
+  .controls{display:flex; align-items:center; gap:8px; padding:6px 8px; background:#0c0f18; border-top:1px solid var(--border)}
+  .range{appearance:none; width:160px; height:4px; background:#2b3040; border-radius:999px; outline:none}
   .range::-webkit-slider-thumb{appearance:none; width:12px; height:12px; border-radius:50%; background:#4c84ff; cursor:pointer}
   .range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#4c84ff;border:none;cursor:pointer}
 </style>
 </head>
 <body>
-  <div class="corner" id="corner" style="width:260px">
-    <div class="resize-handle" id="handle" title="Drag to resize"></div>
-    <div class="bar">
+  <div class="corner" id="corner">
+    <div class="bar" id="drag">
       <span class="title">🧠 The Brain Rot Corner</span>
-      <input id="widthRange" class="range" type="range" min="200" max="600" step="2" value="260" title="Width">
       <button class="btn" id="muteBtn">Unmute</button>
       <button class="btn" id="closeBtn">Close</button>
     </div>
-    <div class="iframe-wrap">
+    <div class="frame-wrap">
       <iframe id="yt" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+    <div class="controls">
+      <label style="font-size:12px; color:#9fb3c8">Size</label>
+      <input id="size" class="range" type="range" min="260" max="900" step="2" value="420">
+      <span id="px" style="font-size:12px; color:#9fb3c8">420px</span>
     </div>
   </div>
 
 <script>
 (function(){
   const corner = document.getElementById('corner');
-  const handle = document.getElementById('handle');
-  const widthRange = document.getElementById('widthRange');
+  const drag = document.getElementById('drag');
   const yt = document.getElementById('yt');
   const muteBtn = document.getElementById('muteBtn');
   const closeBtn = document.getElementById('closeBtn');
+  const size = document.getElementById('size');
+  const px = document.getElementById('px');
 
-  // Hard-coded YouTube gameplay link
-  const vid = "eRXE8Aebp7s"; 
+  // Hard-coded 16:9 Subway Surfers video (embeddable)
+  const vid = "Q9B_3QUqkO0"; 
   let muted = true;
-
-  // Init saved width
-  const savedW = parseInt(localStorage.getItem('brainrot_width')||'260', 10);
-  setWidth(savedW);
-
-  function setWidth(px){
-    const w = Math.max(200, Math.min(600, px|0));
-    corner.style.width = w + 'px';
-    widthRange.value = String(w);
-    localStorage.setItem('brainrot_width', w);
-  }
-
-  // Drag-resize from the left edge
-  let dragging=false, startX=0, startW=0;
-  handle.addEventListener('mousedown', (e)=>{
-    dragging=true; startX = e.clientX; startW = corner.getBoundingClientRect().width;
-    document.body.style.userSelect='none';
-    e.preventDefault();
-  });
-  window.addEventListener('mousemove', (e)=>{
-    if(!dragging) return;
-    const dx = startX - e.clientX; // dragging left increases width
-    setWidth(startW + dx);
-  });
-  window.addEventListener('mouseup', ()=>{ dragging=false; document.body.style.userSelect=''; });
-
-  // Width slider
-  widthRange.addEventListener('input', ()=> setWidth(parseInt(widthRange.value,10)));
 
   function refresh(){
     const base = "https://www.youtube.com/embed/"+vid;
@@ -103,10 +68,35 @@
     muteBtn.textContent = muted ? "Unmute" : "Mute";
   }
 
+  // Dragging the whole window
+  let dragging=false, sx=0, sy=0, ox=0, oy=0;
+  drag.addEventListener('mousedown', (e)=>{ dragging=true; sx=e.clientX; sy=e.clientY; const r=corner.getBoundingClientRect(); ox=r.left; oy=r.top; e.preventDefault(); });
+  window.addEventListener('mousemove', (e)=>{
+    if(!dragging) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    corner.style.left = (ox+dx)+'px';
+    corner.style.top  = (oy+dy)+'px';
+    corner.style.right = 'auto';
+    corner.style.bottom = 'auto';
+  });
+  window.addEventListener('mouseup', ()=> dragging=false);
+
+  // Resize (keeps 16:9 automatically via padding box)
+  const savedW = parseInt(localStorage.getItem('brainrot16x9_width')||'420',10);
+  function setW(w){
+    const W = Math.max(260, Math.min(900, w|0));
+    corner.style.width = W+'px';
+    size.value = String(W);
+    px.textContent = W+'px';
+    localStorage.setItem('brainrot16x9_width', W);
+  }
+  setW(savedW);
+  size.addEventListener('input', ()=> setW(parseInt(size.value,10)));
+
   muteBtn.addEventListener("click", ()=>{ muted=!muted; refresh(); });
   closeBtn.addEventListener("click", ()=> corner.remove());
 
-  refresh(); // init
+  refresh();
 })();
 </script>
 </body>
