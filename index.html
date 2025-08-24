@@ -9,39 +9,92 @@
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
   .corner{
     position:fixed; top:0; right:0;
-    width:260px; height:100%; z-index:99999;
+    height:100%; z-index:99999;
     border-left:1px solid var(--border);
     background:black; box-shadow:-4px 0 12px rgba(0,0,0,.4);
     display:flex; flex-direction:column;
   }
   .bar{display:flex;align-items:center;gap:8px;background:var(--panel);
        padding:6px 8px;font-weight:600;font-size:12px}
-  .title{flex:1}
+  .title{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .btn{border:1px solid var(--border);background:#191e2b;color:var(--text);
        border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer}
   .btn:hover{background:#202637}
-  iframe{flex:1;width:100%;border:0;background:black}
+  .iframe-wrap{flex:1;overflow:hidden;position:relative;background:black}
+  iframe{
+    position:absolute;top:0;left:0;
+    width:100%;height:100%;
+    border:0;
+    transform:scale(1.35); /* zoom to fill vertical panel */
+    transform-origin:center;
+  }
+  /* Drag handle on the left edge */
+  .resize-handle{
+    position:absolute; left:-6px; top:0; width:10px; height:100%;
+    cursor:col-resize; z-index:100000; /* above iframe */
+    background:transparent;
+  }
+  .hint{position:fixed; left:12px; bottom:12px; color:#a9b4c2; font-size:12px}
+  /* Optional width slider */
+  .range{appearance:none; width:110px; height:4px; background:#2b3040; border-radius:999px; outline:none}
+  .range::-webkit-slider-thumb{appearance:none; width:12px; height:12px; border-radius:50%; background:#4c84ff; cursor:pointer}
+  .range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#4c84ff;border:none;cursor:pointer}
 </style>
 </head>
 <body>
-  <div class="corner" id="corner">
+  <div class="corner" id="corner" style="width:260px">
+    <div class="resize-handle" id="handle" title="Drag to resize"></div>
     <div class="bar">
       <span class="title">🧠 The Brain Rot Corner</span>
+      <input id="widthRange" class="range" type="range" min="200" max="600" step="2" value="260" title="Width">
       <button class="btn" id="muteBtn">Unmute</button>
       <button class="btn" id="closeBtn">Close</button>
     </div>
-    <iframe id="yt" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <div class="iframe-wrap">
+      <iframe id="yt" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
   </div>
 
 <script>
 (function(){
+  const corner = document.getElementById('corner');
+  const handle = document.getElementById('handle');
+  const widthRange = document.getElementById('widthRange');
   const yt = document.getElementById('yt');
   const muteBtn = document.getElementById('muteBtn');
   const closeBtn = document.getElementById('closeBtn');
 
-  // Hard-coded YouTube gameplay link (user provided)
+  // Hard-coded YouTube gameplay link
   const vid = "eRXE8Aebp7s"; 
   let muted = true;
+
+  // Init saved width
+  const savedW = parseInt(localStorage.getItem('brainrot_width')||'260', 10);
+  setWidth(savedW);
+
+  function setWidth(px){
+    const w = Math.max(200, Math.min(600, px|0));
+    corner.style.width = w + 'px';
+    widthRange.value = String(w);
+    localStorage.setItem('brainrot_width', w);
+  }
+
+  // Drag-resize from the left edge
+  let dragging=false, startX=0, startW=0;
+  handle.addEventListener('mousedown', (e)=>{
+    dragging=true; startX = e.clientX; startW = corner.getBoundingClientRect().width;
+    document.body.style.userSelect='none';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e)=>{
+    if(!dragging) return;
+    const dx = startX - e.clientX; // dragging left increases width
+    setWidth(startW + dx);
+  });
+  window.addEventListener('mouseup', ()=>{ dragging=false; document.body.style.userSelect=''; });
+
+  // Width slider
+  widthRange.addEventListener('input', ()=> setWidth(parseInt(widthRange.value,10)));
 
   function refresh(){
     const base = "https://www.youtube.com/embed/"+vid;
@@ -51,7 +104,7 @@
   }
 
   muteBtn.addEventListener("click", ()=>{ muted=!muted; refresh(); });
-  closeBtn.addEventListener("click", ()=> document.getElementById("corner").remove());
+  closeBtn.addEventListener("click", ()=> corner.remove());
 
   refresh(); // init
 })();
