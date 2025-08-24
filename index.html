@@ -9,11 +9,11 @@
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
   .corner{
     position:fixed; right:12px; bottom:12px; z-index:99999;
-    width:480px; aspect-ratio:16/9;
+    width:520px; aspect-ratio:16/9;
     border:1px solid var(--border); border-radius:12px; overflow:hidden;
     background:black; box-shadow:0 10px 24px rgba(0,0,0,.4);
     display:flex; flex-direction:column;
-    resize:both;
+    resize:both; /* drag bottom-right to resize */
   }
   .bar{display:flex;align-items:center;gap:8px;background:var(--panel);
        padding:6px 8px;font-weight:600;font-size:12px;cursor:move;}
@@ -42,23 +42,24 @@
   const muteBtn = document.getElementById('muteBtn');
   const closeBtn = document.getElementById('closeBtn');
 
-  // Hard-coded 16:9 YouTube video
-  const vid = "vTfD20dbxho"; 
+  // Hard-coded 16:9 YouTube video (looped)
+  const vid = "i0M4ARe9v0Y";
   let muted = true;
 
   function refresh(){
     const base = "https://www.youtube.com/embed/"+vid;
+    // loop requires playlist=<same id>; autoplay starts muted for policy
     const params = `?autoplay=1&mute=${muted?1:0}&loop=1&playlist=${vid}&controls=0&modestbranding=1&rel=0`;
     yt.src = base+params;
     muteBtn.textContent = muted ? "Unmute" : "Mute";
   }
 
-  // Dragging
+  // Dragging window
   let dragging=false, sx=0, sy=0, ox=0, oy=0;
   drag.addEventListener('mousedown', (e)=>{ 
-    dragging=true; sx=e.clientX; sy=e.clientY; 
-    const r=corner.getBoundingClientRect(); ox=r.left; oy=r.top; 
-    e.preventDefault(); 
+    dragging=true; sx=e.clientX; sy=e.clientY;
+    const r=corner.getBoundingClientRect(); ox=r.left; oy=r.top;
+    e.preventDefault();
   });
   window.addEventListener('mousemove', (e)=>{
     if(!dragging) return;
