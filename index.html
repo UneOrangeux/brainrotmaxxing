@@ -8,17 +8,19 @@
   :root{ --bg:#0f1115; --panel:#131620; --border:#2b3040; --text:#e6edf3; }
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial,sans-serif}
   .corner{
-    position:fixed; right:12px; bottom:12px;
-    width:360px; height:220px; z-index:99999;
-    border:1px solid var(--border); border-radius:12px; overflow:hidden;
-    background:black; box-shadow:0 10px 24px rgba(0,0,0,.4);
+    position:fixed; top:0; right:0;
+    width:260px; height:100%; z-index:99999;
+    border-left:1px solid var(--border);
+    background:black; box-shadow:-4px 0 12px rgba(0,0,0,.4);
+    display:flex; flex-direction:column;
   }
-  .bar{display:flex;align-items:center;gap:8px;background:var(--panel);padding:6px 8px;font-weight:600;font-size:12px}
+  .bar{display:flex;align-items:center;gap:8px;background:var(--panel);
+       padding:6px 8px;font-weight:600;font-size:12px}
   .title{flex:1}
   .btn{border:1px solid var(--border);background:#191e2b;color:var(--text);
-       border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer}
+       border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer}
   .btn:hover{background:#202637}
-  iframe{width:100%;height:calc(100% - 32px);border:0;display:block;background:black}
+  iframe{flex:1;width:100%;border:0;background:black}
 </style>
 </head>
 <body>
@@ -37,8 +39,8 @@
   const muteBtn = document.getElementById('muteBtn');
   const closeBtn = document.getElementById('closeBtn');
 
-  // Hard-coded Subway Surfers gameplay (embeddable video ID)
-  const vid = "Q9B_3QUqkO0"; 
+  // Hard-coded YouTube gameplay link (user provided)
+  const vid = "eRXE8Aebp7s"; 
   let muted = true;
 
   function refresh(){
@@ -49,7 +51,7 @@
   }
 
   muteBtn.addEventListener("click", ()=>{ muted=!muted; refresh(); });
-  closeBtn.addEventListener("click", ()=> yt.parentElement.remove());
+  closeBtn.addEventListener("click", ()=> document.getElementById("corner").remove());
 
   refresh(); // init
 })();
